@@ -114,6 +114,7 @@
               <li><strong>Recomienda:</strong> {{ encuesta.recomienda }}</li>
               <li><strong>Comentarios:</strong> {{ encuesta.comentarios }}</li>
             </ul>
+            <button type="button" class="btn btn-primary" @click="download">Descargar datos del formulario</button>
           </div>
         </form>
       </div>
@@ -221,6 +222,58 @@ export default {
         console.log('Datos enviados:', this.encuesta)
         this.enviado = true
       }
+    },
+    // Método para descargar los datos del formulario como un archivo JSON
+    download() {
+      // JSON.stringify() convierte el objeto JavaScript en una cadena de texto en formato JSON
+      // El segundo parámetro (null) indica que no aplicaremos filtros
+      // El tercer parámetro (2) es para dar formato legible con 2 espacios de indentación
+      const jsonContent = JSON.stringify(this.encuesta, null, 2)
+
+      // Blob (Binary Large Object) es un objeto que representa datos en formato binario
+      // Aquí envolvemos el contenido JSON con el tipo MIME 'application/json'
+      // Esto le dice al navegador que es un archivo JSON
+      const blob = new Blob([jsonContent], { type: 'application/json' })
+
+      // Llamamos al método triggerDownload para manejar la descarga del archivo
+      // Le pasamos el blob con los datos y el nombre que tendrá el archivo
+      this.triggerDownload(blob, 'encuesta.json')
+    },
+
+    triggerDownload(blob, fileName) {
+      // Paso 1: Crear una URL temporal que representa el blob (archivo) en memoria
+      // URL.createObjectURL() genera una URL única que apunta a nuestro archivo
+      // Esta URL solo existe mientras la página esté abierta
+      const url = URL.createObjectURL(blob);
+
+      // Paso 2: Crear un elemento <a> (anchor/enlace) de forma invisible
+      // Aunque no lo veremos en la página, lo usaremos para simular una descarga
+      const link = document.createElement('a');
+
+      // Asignar la URL temporal al atributo href del enlace
+      // De esta forma el enlace "apunta" a nuestro archivo
+      link.href = url;
+
+      // El atributo download es lo que hace que el navegador descargue el archivo
+      // en lugar de abrirlo. El valor es el nombre con el que se guardará
+      link.download = fileName;
+
+      // Paso 3: Agregar el elemento al documento HTML para poder interactuar con él
+      // Aunque no aparezca visualmente, necesita estar en el DOM para que funcione
+      document.body.appendChild(link);
+
+      // Gatillar un click en el enlace, esto dispara la descarga del archivo
+      // Es como si el usuario hubiera hecho click manualmente
+      link.click();
+
+      // Paso 4: Limpiar los recursos que creamos para no contaminar el DOM
+      // Eliminar el elemento <a> del documento porque ya no lo necesitamos
+      document.body.removeChild(link);
+
+      // Liberar la memoria de la URL temporal
+      // Esto es muy importante para evitar pérdidas de memoria (memory leaks)
+      // El navegador mantiene un registro de estas URLs hasta que las revocamos
+      URL.revokeObjectURL(url);
     }
   },
   // watch: {},
